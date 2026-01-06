@@ -1,0 +1,55 @@
+{
+  "formatVersion": "202502",
+  "computeEngineSettings": {},
+  "name": "World Bank GDP",
+  "queryGroups": [],
+  "documentLocale": "en-US",
+  "queriesMetadata": {
+    "FX (EFB)": {
+      "queryId": "6fb0354b-c981-427e-b569-c9e742368ebc",
+      "queryName": "FX (EFB)",
+      "loadEnabled": false
+    },
+    "DefaultDestination": {
+      "queryId": "e73181a1-110c-4fe5-93d4-eb1ab0e3f353",
+      "queryName": "DefaultDestination",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "DefaultDestination_DataDestinationTransform": {
+      "queryId": "4579aa67-6c6d-4a06-9282-308a12f74bcd",
+      "queryName": "DefaultDestination_DataDestinationTransform",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "FX (EFB)_DataDestination": {
+      "queryId": "4da78e8f-7356-461d-bf69-405fcd9ca466",
+      "queryName": "FX (EFB)_DataDestination",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "FX (EFB)_DataDestinationTransform": {
+      "queryId": "fb7f4a05-fece-4329-b838-21e4ca839328",
+      "queryName": "FX (EFB)_DataDestinationTransform",
+      "isHidden": true,
+      "loadEnabled": false
+    }
+  },
+  "connections": [
+    {
+      "path": "https://api.worldbank.org/v2/country/USA/indicator/NY.GDP.MKTP.CD?format=json",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"abd57732-6fb6-4b0b-bec9-4e6e56e44449\"}"
+    },
+    {
+      "path": "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"8140f455-c8f2-4268-ba52-2fcb1cd71ad0\"}"
+    },
+    {
+      "path": "Lakehouse",
+      "kind": "Lakehouse",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"c8a2a3fd-1790-42bd-8bd9-e1425796f01d\"}"
+    }
+  ]
+}

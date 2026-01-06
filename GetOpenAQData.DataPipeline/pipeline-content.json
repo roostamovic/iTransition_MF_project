@@ -1,0 +1,99 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "RestSource",
+            "requestMethod": "GET",
+            "additionalHeaders": {
+              "X-API-Key": {
+                "value": "@pipeline().parameters.openaq_api_key",
+                "type": "Expression"
+              }
+            },
+            "paginationRules": {
+              "supportRFC5988": "true"
+            },
+            "httpRequestTimeout": "00:01:40",
+            "requestInterval": "00.00:00:00.010",
+            "datasetSettings": {
+              "type": "RestResource",
+              "typeProperties": {
+                "relativeUrl": {
+                  "value": "@concat('v3/countries/',pipeline().parameters.country_id)",
+                  "type": "Expression"
+                }
+              },
+              "schema": [],
+              "externalReferences": {
+                "connection": "86442820-c116-4f65-ba52-1fa393838602"
+              },
+              "annotations": []
+            }
+          },
+          "sink": {
+            "type": "JsonSink",
+            "formatSettings": {
+              "type": "JsonWriteSettings"
+            },
+            "storeSettings": {
+              "type": "LakehouseWriteSettings"
+            },
+            "datasetSettings": {
+              "type": "Json",
+              "typeProperties": {
+                "location": {
+                  "type": "LakehouseLocation",
+                  "folderPath": {
+                    "value": "@concat('Bronze/WeatherData/', pipeline().parameters.country_id, '/')",
+                    "type": "Expression"
+                  },
+                  "fileName": {
+                    "value": "@concat('openaq-', pipeline().parameters.country_id, '-', \n    formatDateTime(pipeline().TriggerTime, 'yyyy'), '-',\n    formatDateTime(pipeline().TriggerTime, 'MM'), '-',\n    formatDateTime(pipeline().TriggerTime, 'dd'), '.json')",
+                    "type": "Expression"
+                  }
+                }
+              },
+              "schema": {},
+              "linkedService": {
+                "name": "MedallionLH",
+                "properties": {
+                  "type": "Lakehouse",
+                  "typeProperties": {
+                    "artifactId": "01acf15e-f805-8aaa-4acd-3eeb78ab0d01",
+                    "workspaceId": "00000000-0000-0000-0000-000000000000",
+                    "rootFolder": "Files"
+                  },
+                  "annotations": []
+                }
+              },
+              "annotations": []
+            }
+          },
+          "enableStaging": false
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "GetOpenAQData",
+        "dependsOn": []
+      }
+    ],
+    "parameters": {
+      "openaq_api_key": {
+        "type": "string",
+        "defaultValue": "1731846000fef59c8448375c2ec6b4a931f6ac643f0803a04d862e152a3401a5"
+      },
+      "country_id": {
+        "type": "string",
+        "defaultValue": "155"
+      }
+    }
+  }
+}

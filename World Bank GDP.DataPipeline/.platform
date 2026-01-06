@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "World Bank GDP"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2715fb08-8e9a-88bd-49a9-d3959323a1c1"
+  }
+}

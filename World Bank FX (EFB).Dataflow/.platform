@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Dataflow",
+    "displayName": "World Bank FX (EFB)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e62cfb27-409c-8c2a-4dbd-852efa49a53e"
+  }
+}

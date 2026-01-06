@@ -1,0 +1,66 @@
+{
+  "formatVersion": "202502",
+  "computeEngineSettings": {},
+  "name": "NYCTaxiTripsData",
+  "queryGroups": [],
+  "documentLocale": "en-US",
+  "queriesMetadata": {
+    "NYC Yellow Taxi Trips": {
+      "queryId": "256ab53e-f816-4c1c-9cfe-b989ff5f451f",
+      "queryName": "NYC Yellow Taxi Trips",
+      "loadEnabled": false
+    },
+    "DefaultDestination": {
+      "queryId": "f21bb66b-ef21-4879-a4ef-5f145c2152cc",
+      "queryName": "DefaultDestination",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "NYC Yellow Taxi Trips_DataDestination": {
+      "queryId": "6a30b5d3-4fe9-4389-bba6-24325c16b8e1",
+      "queryName": "NYC Yellow Taxi Trips_DataDestination",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "NYC Yellow Taxi Trips_DataDestinationTransform": {
+      "queryId": "25d4320f-ea9f-4d85-bee6-ec71d2d8b1ac",
+      "queryName": "NYC Yellow Taxi Trips_DataDestinationTransform",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "NYC Green Taxi Trips": {
+      "queryId": "63172cc9-f462-4d98-a5d3-e279ffcc8d7a",
+      "queryName": "NYC Green Taxi Trips",
+      "loadEnabled": false
+    },
+    "NYC Green Taxi Trips_DataDestination": {
+      "queryId": "214de847-1357-4198-a1ac-d9bcb4ea7eb3",
+      "queryName": "NYC Green Taxi Trips_DataDestination",
+      "isHidden": true,
+      "loadEnabled": false
+    },
+    "NYC Green Taxi Trips_DataDestinationTransform": {
+      "queryId": "e9474459-ddd4-47e1-b3a5-a3a6cb3e27e4",
+      "queryName": "NYC Green Taxi Trips_DataDestinationTransform",
+      "isHidden": true,
+      "loadEnabled": false
+    }
+  },
+  "connections": [
+    {
+      "path": "https://data.cityofnewyork.us/resource/4b4i-vvec.csv",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"6a84df16-4515-46ac-9774-55515c225f45\"}"
+    },
+    {
+      "path": "Lakehouse",
+      "kind": "Lakehouse",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"c8a2a3fd-1790-42bd-8bd9-e1425796f01d\"}"
+    },
+    {
+      "path": "https://data.cityofnewyork.us/resource/peyi-gg4n.csv",
+      "kind": "Web",
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"86e0aa53-4dc5-4bc9-b0bb-566350abc8e8\"}"
+    }
+  ]
+}
