@@ -6,10 +6,10 @@
       "jobType": "Execute",
       "configuration": {
         "type": "Cron",
-        "startDateTime": "2025-12-29T12:00:00",
-        "endDateTime": "2026-02-01T00:01:00",
+        "startDateTime": "2026-01-08T17:33:00",
+        "endDateTime": "2027-01-08T17:33:00",
         "localTimeZoneId": "West Asia Standard Time",
-        "interval": 60
+        "interval": 30
       }
     }
   ]
