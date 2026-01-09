@@ -48,19 +48,15 @@
   },
   "connections": [
     {
-      "path": "https://data.cityofnewyork.us/resource/4b4i-vvec.csv",
-      "kind": "Web",
-      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"6a84df16-4515-46ac-9774-55515c225f45\"}"
-    },
-    {
       "path": "Lakehouse",
       "kind": "Lakehouse",
       "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"c8a2a3fd-1790-42bd-8bd9-e1425796f01d\"}"
     },
     {
-      "path": "https://data.cityofnewyork.us/resource/peyi-gg4n.csv",
+      "path": "https://d37ci6vzurychx.cloudfront.net/",
       "kind": "Web",
-      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"86e0aa53-4dc5-4bc9-b0bb-566350abc8e8\"}"
+      "connectionId": "{\"ClusterId\":\"abb801f0-f3fa-4692-bab3-920ce268cbaf\",\"DatasourceId\":\"89d6e413-8855-4639-a973-8023f8bca77c\"}"
     }
-  ]
+  ],
+  "fastCombine": true
 }
