@@ -82,7 +82,6 @@ sensor_ids_df = (
 
 sensor_ids = [row.sensor_id for row in sensor_ids_df.collect()]
 
-
 # METADATA ********************
 
 # META {
@@ -96,9 +95,9 @@ import time
 from math import ceil
 
 RATE_LIMIT = 60          # requests
-WINDOW_SECONDS = 40      # per minute
+WINDOW_SECONDS = 35      # per minute
 
-sensor_lookup = {}
+sensor_rows = []
 
 total_ids = len(sensor_ids)
 num_batches = ceil(total_ids / RATE_LIMIT)
@@ -114,16 +113,17 @@ for batch_idx in range(num_batches):
     for sensor_id in batch:
         try:
             response = client.sensors.get(sensor_id).dict()
-            sensor_lookup[sensor_id] = response.get("results", [])
+            for r in response.get("results", []):
+                #r["sensor_id"] = sensor_id
+                sensor_rows.append(r)
         except Exception as e:
             print(f"⚠️ Failed to fetch sensor {sensor_id}: {e}")
-            sensor_lookup[sensor_id] = []
+
 
     # ⏱️ Wait only if there are more batches left
     if batch_idx < num_batches - 1:
         print(f"⏳ Rate limit reached — sleeping {WINDOW_SECONDS} seconds...")
         time.sleep(WINDOW_SECONDS)
-
 
 # METADATA ********************
 
@@ -134,25 +134,139 @@ for batch_idx in range(num_batches):
 
 # CELL ********************
 
-broadcast_sensors = spark.sparkContext.broadcast(sensor_lookup)
+from pyspark.sql.types import *
 
-from pyspark.sql.functions import udf
-from pyspark.sql.types import ArrayType, MapType, StringType
+schema = StructType([
 
-def enrich_sensors(sensors):
-    enriched = []
-    lookup = broadcast_sensors.value
-    for s in sensors:
-        sid = s["id"]
-        enriched.extend(lookup.get(sid, []))
-    return enriched
+    StructField("id", LongType(), True),
+    StructField("name", StringType(), True),
 
-enrich_udf = udf(enrich_sensors, ArrayType(MapType(StringType(), StringType())))
+    StructField("parameter", StructType([
+        StructField("id", LongType(), True),
+        StructField("name", StringType(), True),
+        StructField("units", StringType(), True),
+        StructField("display_name", StringType(), True)
+    ]), True),
 
-enriched_df = locations_df.withColumn(
-    "sensors",
-    enrich_udf(col("sensors"))
+    StructField("datetime_first", StructType([
+        StructField("utc", StringType(), True),
+        StructField("local", StringType(), True)
+    ]), True),
+
+    StructField("datetime_last", StructType([
+        StructField("utc", StringType(), True),
+        StructField("local", StringType(), True)
+    ]), True),
+
+    StructField("coverage", StructType([
+        StructField("expected_count", LongType(), True),
+        StructField("expected_interval", StringType(), True),
+        StructField("observed_count", LongType(), True),
+        StructField("observed_interval", StringType(), True),
+        StructField("percent_complete", DoubleType(), True),
+        StructField("percent_coverage", DoubleType(), True),
+        StructField("datetime_from", StructType([
+            StructField("utc", StringType(), True),
+            StructField("local", StringType(), True)
+        ]), True),
+        StructField("datetime_to", StructType([
+            StructField("utc", StringType(), True),
+            StructField("local", StringType(), True)
+        ]), True)
+    ]), True),
+
+    StructField("latest", StructType([
+        StructField("datetime", StructType([
+            StructField("utc", StringType(), True),
+            StructField("local", StringType(), True)
+        ]), True),
+        StructField("value", DoubleType(), True),
+        StructField("coordinates", StructType([
+            StructField("latitude", DoubleType(), True),
+            StructField("longitude", DoubleType(), True)
+        ]), True)
+    ]), True),
+
+    StructField("summary", StructType([
+        StructField("min", DoubleType(), True),
+        StructField("q02", DoubleType(), True),
+        StructField("q25", DoubleType(), True),
+        StructField("median", DoubleType(), True),
+        StructField("q75", DoubleType(), True),
+        StructField("q98", DoubleType(), True),
+        StructField("max", DoubleType(), True),
+        StructField("avg", DoubleType(), True),
+        StructField("sd", DoubleType(), True)
+    ]), True)
+
+])
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+sensors_df = spark.createDataFrame(sensor_rows, schema=schema)
+sensors_df = (
+                sensors_df.withColumnRenamed("id", "sensor_id") \
+                          .withColumnRenamed("name", "param_name")
+            )
+sensors_df = sensors_df.drop("datetime_first", "datetime_last")
+
+silver = (
+    locations_df
+    .withColumn("sensor", explode("sensors"))
+    .join(
+        sensors_df,
+        col("sensor.id") == col("sensor_id"),
+        "left"
+    )
 )
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# resp = client.sensors.get(7972702).dict()
+# sample = spark.createDataFrame(list(resp.get('results', [])), schema=schema)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# broadcast_sensors = spark.sparkContext.broadcast(sensor_lookup)
+
+# from pyspark.sql.functions import udf
+# from pyspark.sql.types import ArrayType, MapType, StringType
+
+# def enrich_sensors(sensors):
+#     enriched = []
+#     lookup = broadcast_sensors.value
+#     for s in sensors:
+#         sid = s["id"]
+#         enriched.extend(lookup.get(sid, []))
+#     return enriched
+
+# enrich_udf = udf(enrich_sensors, ArrayType(MapType(StringType(), StringType())))
+
+# enriched_df = locations_df.withColumn(
+#     "sensors",
+#     enrich_udf(col("sensors"))
+# )
 
 
 # METADATA ********************
@@ -169,9 +283,9 @@ enriched_df = locations_df.withColumn(
 
 # bronze_path = f"Files/Bronze/WeatherData"
 
-enriched_df.coalesce(1) \
+silver \
     .write \
-    .mode("overwrite") \
+    .mode("append") \
     .format('json') \
     .save("Files/Bronze/WeatherData/NYC")
 

@@ -28,8 +28,10 @@
 
 import pandas as pd
 # Load data into pandas DataFrame from "/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_green.csv"
-yellow = pd.read_csv("/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_yellow.csv")
-green = pd.read_csv("/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_green.csv")
+# yellow = pd.read_csv("/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_yellow.csv")
+# green = pd.read_csv("/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_green.csv")
+yellow_df = spark.read.format("csv").option("header","true").load("Files/Bronze/NYCTaxiData/nyc_yellow.csv")
+green_df = spark.read.format("csv").option("header","true").load("Files/Bronze/NYCTaxiData/nyc_green.csv")
 
 # METADATA ********************
 
@@ -40,29 +42,8 @@ green = pd.read_csv("/lakehouse/default/Files/Bronze/NYCTaxiData/nyc_green.csv")
 
 # CELL ********************
 
-yellow_df = spark.createDataFrame(yellow)
-green_df = spark.createDataFrame(green)
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-green_df.columns
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
+# yellow_df = spark.createDataFrame(yellow)
+# green_df = spark.createDataFrame(green)
 
 # METADATA ********************
 
@@ -146,7 +127,6 @@ green_silver = (
 # CELL ********************
 
 taxi_silver = yellow_silver.unionByName(green_silver)
-
 
 # METADATA ********************
 
@@ -245,24 +225,12 @@ taxi_silver.filter(col("ratecodeid").isin(2, 3, 4)) \
 
 # CELL ********************
 
-taxi_silver.toPandas()['pickup_datetime'].min()
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 from pyspark.sql.functions import avg
 
 taxi_silver.agg(
     avg("total_amount").alias("avg_revenue"),
     avg("trip_duration_min").alias("avg_duration")
 ).show()
-
 
 # METADATA ********************
 
@@ -278,7 +246,6 @@ taxi_silver.groupBy("pickup_hour") \
     .orderBy("pickup_hour") \
     .show()
 
-
 # METADATA ********************
 
 # META {
@@ -291,7 +258,6 @@ taxi_silver.groupBy("pickup_hour") \
 taxi_silver.groupBy("pickup_hour") \
     .agg(avg("trip_distance").alias("avg_distance")) \
     .show()
-
 
 # METADATA ********************
 
@@ -309,7 +275,6 @@ taxi_silver.groupBy("pickup_year", "pickup_month") \
     ) \
     .orderBy("pickup_year", "pickup_month") \
     .show()
-
 
 # METADATA ********************
 
@@ -336,7 +301,7 @@ taxi_silver.groupBy("pickup_year", "pickup_month") \
 
 fx_raw = spark.read.format("csv").option("header","true").load("Files/Bronze/WorldBankData/FX_EFB.csv")
 # df now is a Spark DataFrame containing CSV data from "Files/Bronze/WorldBankData/FX_EFB.csv".
-display(fx_raw)
+#display(fx_raw)
 
 # METADATA ********************
 
@@ -448,7 +413,7 @@ taxi_daily = (
 
 # CELL ********************
 
-display(taxi_daily)
+#display(taxi_daily)
 
 # METADATA ********************
 
@@ -471,18 +436,7 @@ taxi_eur = (
         col("revenue_usd") * col("usd_to_eur")
     )
 )
-
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-display(taxi_eur)
+#display(taxi_eur)
 
 # METADATA ********************
 
@@ -511,6 +465,24 @@ macro_vs_taxi = (
     )
 )
 
+#display(macro_vs_taxi)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
+# ## OpenAQ API Data
+
+# CELL ********************
+
+import os
+
+nyc_files = os.listdir("/lakehouse/default/Files/Bronze/WeatherData/NYC")
 
 # METADATA ********************
 
@@ -521,7 +493,16 @@ macro_vs_taxi = (
 
 # CELL ********************
 
-display(macro_vs_taxi)
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, explode, to_timestamp, year, month, dayofweek, hour, current_timestamp
+
+# Path to the raw JSON file in the lakehouse
+json_path = f"Files/Bronze/WeatherData/NYC/{nyc_files[-1]}"
+
+# Read JSON
+openaq_raw = spark.read.option("multiline", False).json(json_path)
+
+openaq_raw.printSchema()
 
 # METADATA ********************
 
@@ -532,26 +513,31 @@ display(macro_vs_taxi)
 
 # CELL ********************
 
-df = spark.read.option("multiline", "true").json("Files/Bronze/WeatherData/155/openaq-155-2026-01-05.json")
-# df now is a Spark DataFrame containing JSON data from "Files/Bronze/WeatherData/41/openaq-41-2025-12-29.json".
-display(df)
+# Explode the 'sensors' array so each sensor is a separate row
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
 
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-from pyspark.sql.functions import explode, col
-
-locations_df = df.select(
-    explode("results").alias("r")
+silver_df = (
+    openaq_raw
+    .select(
+        F.col("id").alias("location_id"),
+        F.col("name").alias("location_name"),
+        F.col("locality"),
+        F.col("coordinates.latitude").cast("double").alias("latitude"),
+        F.col("coordinates.longitude").cast("double").alias("longitude"),
+        F.lower(F.col("param_name")).alias("parameter_raw"),
+        F.col("latest.value").cast("double").alias("value_raw"),
+        F.col("summary.avg").cast("double").alias("avg"),
+        F.col("summary.min").cast("double").alias("min"),
+        F.col("summary.max").cast("double").alias("max"),
+        F.to_timestamp("latest.datetime.utc").alias("datetime_utc"),
+        F.to_timestamp("latest.datetime.local").alias("datetime_local"),
+        F.col("provider.id").alias("provider_id"),
+        F.col("is_mobile"),
+        F.col("is_monitor")
+    )
 )
 
-display(locations_df)
 
 # METADATA ********************
 
@@ -562,35 +548,22 @@ display(locations_df)
 
 # CELL ********************
 
-sensors_df = locations_df.select(
-    col("r.id").alias("location_id"),
-    col("r.name").alias("location_name"),
-    col("r.locality"),
-    col("r.timezone"),
-    col("r.isMobile"),
-    col("r.isMonitor"),
-
-    # coordinates
-    col("r.coordinates.latitude").alias("latitude"),
-    col("r.coordinates.longitude").alias("longitude"),
-
-    # country
-    col("r.country.code").alias("country_code"),
-    col("r.country.name").alias("country_name"),
-
-    # provider
-    col("r.provider.id").alias("provider_id"),
-    col("r.provider.name").alias("provider_name"),
-
-    # owner
-    col("r.owner.id").alias("owner_id"),
-    col("r.owner.name").alias("owner_name"),
-
-    explode("r.sensors").alias("s")
+silver_df = (
+    silver_df
+    .withColumn(
+        "parameter",
+        F.when(F.col("parameter_raw").contains("pm25"), "pm25")
+         .when(F.col("parameter_raw").contains("pm10"), "pm10")
+         .when(F.col("parameter_raw").contains("o3"), "o3")
+         .otherwise("unknown")
+    )
+    .withColumn(
+        "unit",
+        F.when(F.col("parameter") == "o3", "ppm")
+         .otherwise("µg/m³")
+    )
 )
 
-display(sensors_df)
-
 
 # METADATA ********************
 
@@ -601,32 +574,42 @@ display(sensors_df)
 
 # CELL ********************
 
-silver_df = sensors_df.select(
-    "location_id",
-    "location_name",
-    "locality",
-    "timezone",
-    "isMobile",
-    "isMonitor",
-    "latitude",
-    "longitude",
-    "country_code",
-    "country_name",
-    "provider_id",
-    "provider_name",
-    "owner_id",
-    "owner_name",
-
-    col("s.id").alias("sensor_id"),
-    col("s.name").alias("sensor_name"),
-
-    col("s.parameter.id").alias("parameter_id"),
-    col("s.parameter.name").alias("parameter_name"),
-    col("s.parameter.displayName").alias("parameter_display_name"),
-    col("s.parameter.units").alias("unit")
+silver_df = (
+    silver_df
+    .withColumn(
+        "value",
+        F.when(F.col("value_raw") < 0, None)
+         .when((F.col("parameter") == "pm25") & (F.col("value_raw") > 1000), None)
+         .when((F.col("parameter") == "pm10") & (F.col("value_raw") > 1500), None)
+         .otherwise(F.col("value_raw"))
+    )
 )
 
-display(silver_df)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+silver_df = (
+    silver_df
+    .withColumn("date", F.to_date("datetime_utc"))
+    .withColumn("hour", F.hour("datetime_utc"))
+    .withColumn("year", F.year("datetime_utc"))
+    .withColumn("month", F.month("datetime_utc"))
+    .withColumn(
+        "season",
+        F.when(F.col("month").isin(12,1,2), "Winter")
+         .when(F.col("month").isin(3,4,5), "Spring")
+         .when(F.col("month").isin(6,7,8), "Summer")
+         .otherwise("Fall")
+    )
+    .withColumn("ingestion_date", F.current_date())
+)
 
 
 # METADATA ********************
@@ -638,7 +621,46 @@ display(silver_df)
 
 # CELL ********************
 
-display(silver_df.tail(5))
+# window_spec = Window.partitionBy(
+#     "location_id", "parameter", "datetime_utc"
+# ).orderBy(F.col("ingestion_date").desc())
+
+# dedup_df = (
+#     silver_df
+#     .withColumn("rn", F.row_number().over(window_spec))
+#     .filter(F.col("rn") == 1)
+#     .drop("rn")
+# )
+
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+
+(
+    silver_df
+    .write
+    .format("delta")
+    .mode("append")
+    .partitionBy("date", "parameter")
+    .saveAsTable("silver.openaq")
+)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 
 # METADATA ********************
 
