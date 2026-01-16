@@ -179,27 +179,12 @@ taxi_silver.write \
 
 # CELL ********************
 
-from pyspark.sql.functions import count
+# from pyspark.sql.functions import count
 
-taxi_silver.groupBy("pickup_hour") \
-    .agg(count("*").alias("trip_count")) \
-    .orderBy("trip_count", ascending=False) \
-    .show()
-
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-taxi_silver.groupBy("pulocationid") \
-    .agg(count("*").alias("trip_count")) \
-    .orderBy("trip_count", ascending=False) \
-    .show(10)
+# taxi_silver.groupBy("pickup_hour") \
+#     .agg(count("*").alias("trip_count")) \
+#     .orderBy("trip_count", ascending=False) \
+#     .show()
 
 
 # METADATA ********************
@@ -211,10 +196,11 @@ taxi_silver.groupBy("pulocationid") \
 
 # CELL ********************
 
-taxi_silver.filter(col("ratecodeid").isin(2, 3, 4)) \
-    .groupBy("ratecodeid") \
-    .count() \
-    .show()
+# taxi_silver.groupBy("pulocationid") \
+#     .agg(count("*").alias("trip_count")) \
+#     .orderBy("trip_count", ascending=False) \
+#     .show(10)
+
 
 # METADATA ********************
 
@@ -225,12 +211,10 @@ taxi_silver.filter(col("ratecodeid").isin(2, 3, 4)) \
 
 # CELL ********************
 
-from pyspark.sql.functions import avg
-
-taxi_silver.agg(
-    avg("total_amount").alias("avg_revenue"),
-    avg("trip_duration_min").alias("avg_duration")
-).show()
+# taxi_silver.filter(col("ratecodeid").isin(2, 3, 4)) \
+#     .groupBy("ratecodeid") \
+#     .count() \
+#     .show()
 
 # METADATA ********************
 
@@ -241,10 +225,12 @@ taxi_silver.agg(
 
 # CELL ********************
 
-taxi_silver.groupBy("pickup_hour") \
-    .agg(avg("total_amount").alias("avg_revenue")) \
-    .orderBy("pickup_hour") \
-    .show()
+# from pyspark.sql.functions import avg
+
+# taxi_silver.agg(
+#     avg("total_amount").alias("avg_revenue"),
+#     avg("trip_duration_min").alias("avg_duration")
+# ).show()
 
 # METADATA ********************
 
@@ -255,9 +241,10 @@ taxi_silver.groupBy("pickup_hour") \
 
 # CELL ********************
 
-taxi_silver.groupBy("pickup_hour") \
-    .agg(avg("trip_distance").alias("avg_distance")) \
-    .show()
+# taxi_silver.groupBy("pickup_hour") \
+#     .agg(avg("total_amount").alias("avg_revenue")) \
+#     .orderBy("pickup_hour") \
+#     .show()
 
 # METADATA ********************
 
@@ -268,13 +255,26 @@ taxi_silver.groupBy("pickup_hour") \
 
 # CELL ********************
 
-taxi_silver.groupBy("pickup_year", "pickup_month") \
-    .agg(
-        count("*").alias("trip_count"),
-        avg("total_amount").alias("avg_revenue")
-    ) \
-    .orderBy("pickup_year", "pickup_month") \
-    .show()
+# taxi_silver.groupBy("pickup_hour") \
+#     .agg(avg("trip_distance").alias("avg_distance")) \
+#     .show()
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# taxi_silver.groupBy("pickup_year", "pickup_month") \
+#     .agg(
+#         count("*").alias("trip_count"),
+#         avg("total_amount").alias("avg_revenue")
+#     ) \
+#     .orderBy("pickup_year", "pickup_month") \
+#     .show()
 
 # METADATA ********************
 
